@@ -77,6 +77,19 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
    *   during the updateWeights phase.
    */
 
+  for (auto& obs: observations)
+  {
+    double nn_dist = std::numeric_limits<double>::infinity(); 
+
+    for (const auto& mark: predicted)
+    if(double mark_dist = dist(obs.x, obs.y, mark.x, mark.y); mark_dist < nn_dist){
+      obs.id = mark.id;
+      nn_dist = mark_dist;
+    }
+
+  }
+  
+
 }
 
 void ParticleFilter::updateWeights(double sensor_range, std::array<double,2> std_landmark, 
