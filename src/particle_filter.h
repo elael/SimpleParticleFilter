@@ -11,6 +11,7 @@
 
 #include <string>
 #include <vector>
+#include <array>
 #include "helper_functions.h"
 
 struct Particle {
@@ -43,7 +44,7 @@ class ParticleFilter {
    * @param std[] Array of dimension 3 [standard deviation of x [m], 
    *   standard deviation of y [m], standard deviation of yaw [rad]]
    */
-  void init(double x, double y, double theta, double std[]);
+  void init(double x, double y, double theta, std::array<double,3> std);
 
   /**
    * prediction Predicts the state for the next time step
@@ -54,7 +55,7 @@ class ParticleFilter {
    * @param velocity Velocity of car from t to t+1 [m/s]
    * @param yaw_rate Yaw rate of car from t to t+1 [rad/s]
    */
-  void prediction(double delta_t, double std_pos[], double velocity, 
+  void prediction(double delta_t, std::array<double,3> std_pos, double velocity, 
                   double yaw_rate);
   
   /**
@@ -75,7 +76,7 @@ class ParticleFilter {
    * @param observations Vector of landmark observations
    * @param map Map class containing map landmarks
    */
-  void updateWeights(double sensor_range, double std_landmark[], 
+  void updateWeights(double sensor_range, std::array<double,2> std_landmark, 
                      const std::vector<LandmarkObs> &observations,
                      const Map &map_landmarks);
   

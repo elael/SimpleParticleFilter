@@ -2,6 +2,7 @@
 #include <uWS/uWS.h>
 #include <iostream>
 #include <string>
+#include <array>
 #include "json.hpp"
 #include "particle_filter.h"
 
@@ -33,9 +34,9 @@ int main() {
   double sensor_range = 50;  // Sensor range [m]
 
   // GPS measurement uncertainty [x [m], y [m], theta [rad]]
-  double sigma_pos [3] = {0.3, 0.3, 0.01};
+  std::array sigma_pos{0.3, 0.3, 0.01};
   // Landmark measurement uncertainty [x [m], y [m]]
-  double sigma_landmark [2] = {0.3, 0.3};
+  std::array sigma_landmark{0.3, 0.3};
 
   // Read map data
   Map map;
@@ -100,7 +101,7 @@ int main() {
           std::istream_iterator<float>(),
           std::back_inserter(y_sense));
 
-          for (int i = 0; i < x_sense.size(); ++i) {
+          for (std::size_t i = 0; i < x_sense.size(); ++i) {
             LandmarkObs obs;
             obs.x = x_sense[i];
             obs.y = y_sense[i];

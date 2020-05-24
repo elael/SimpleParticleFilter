@@ -21,7 +21,7 @@
 using std::string;
 using std::vector;
 
-void ParticleFilter::init(double x, double y, double theta, double std[]) {
+void ParticleFilter::init(double x, double y, double theta, std::array<double,3> std) {
   /**
    * TODO: Set the number of particles. Initialize all particles to 
    *   first position (based on estimates of x, y, theta and their uncertainties
@@ -34,7 +34,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 
 }
 
-void ParticleFilter::prediction(double delta_t, double std_pos[], 
+void ParticleFilter::prediction(double delta_t, std::array<double,3> std_pos, 
                                 double velocity, double yaw_rate) {
   /**
    * TODO: Add measurements to each particle and add random Gaussian noise.
@@ -59,7 +59,7 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
 
 }
 
-void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
+void ParticleFilter::updateWeights(double sensor_range, std::array<double,2> std_landmark, 
                                    const vector<LandmarkObs> &observations, 
                                    const Map &map_landmarks) {
   /**
