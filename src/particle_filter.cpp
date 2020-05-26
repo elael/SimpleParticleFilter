@@ -175,7 +175,7 @@ void ParticleFilter::updateWeights(double sensor_range, std::array<double,2> std
 const Particle& ParticleFilter::best_particle() const{
   // Just return the first particle if undecided 
   if(best_particle_pt == nullptr)
-  return particles[0];
+    return particles[0];
 
   return *best_particle_pt;
 }
@@ -201,7 +201,7 @@ void ParticleFilter::resample() {
 
   // set new particles and nullify best_particle_pt
   best_particle_pt = nullptr;
-  particles = new_particles;
+  particles = std::move(new_particles);
 }
 
 string ParticleFilter::getAssociations(Particle best) {

@@ -113,7 +113,7 @@ int main() {
 
           // Calculate and output the average weighted error of the particle 
           //   filter over all time steps so far.
-          const auto& best_particle = pf.best_particle();
+          auto best_particle = pf.best_particle();
 
           pf.resample();
 
