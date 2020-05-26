@@ -26,14 +26,12 @@ static std::default_random_engine gen;
 
 void ParticleFilter::init(double x, double y, double theta, std::array<double,3> std) {
   /**
-   * TODO: Set the number of particles. Initialize all particles to 
+   * Set the number of particles. Initialize all particles to 
    *   first position (based on estimates of x, y, theta and their uncertainties
    *   from GPS) and all weights to 1. 
-   * TODO: Add random Gaussian noise to each particle.
-   * NOTE: Consult particle_filter.h for more information about this method 
-   *   (and others in this file).
+   * Add random Gaussian noise to each particle.
    */
-  num_particles = 20;  // TODO: Set the number of particles
+  num_particles = 20;  // Set the number of particles
 
   // Set of current particles
   normal_distribution<double> dist_x(x, std[0]);
@@ -98,17 +96,13 @@ void ParticleFilter::updateWeights(double sensor_range, std::array<double,2> std
                                    const vector<LandmarkObs> &observations, 
                                    const Map &map_landmarks) {
   /**
-   * TODO: Update the weights of each particle using a mult-variate Gaussian 
+   * Update the weights of each particle using a mult-variate Gaussian 
    *   distribution. You can read more about this distribution here: 
    *   https://en.wikipedia.org/wiki/Multivariate_normal_distribution
    * NOTE: The observations are given in the VEHICLE'S coordinate system. 
    *   Your particles are located according to the MAP'S coordinate system. 
    *   You will need to transform between the two systems. Keep in mind that
    *   this transformation requires both rotation AND translation (but no scaling).
-   *   The following is a good resource for the theory:
-   *   https://www.willamette.edu/~gorr/classes/GeneralGraphics/Transforms/transforms2d.htm
-   *   and the following is a good resource for the actual equation to implement
-   *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
 
   double max_weight = -std::numeric_limits<double>::infinity();
@@ -140,10 +134,12 @@ void ParticleFilter::updateWeights(double sensor_range, std::array<double,2> std
     particle.sense_y.clear();
     particle.sense_y.reserve(observations_inmap.size());
 
+    // add observations information
     for (auto& obs: observations_inmap)
     {
+      
+      // select best match from landmarks for the given observation
       double nn_dist = std::numeric_limits<double>::infinity(); 
-
       const LandmarkObs* best_mark;
       for (const auto& mark: landmarks_inrange)
       if(double mark_dist = dist(obs.x, obs.y, mark.x, mark.y); mark_dist < nn_dist){
@@ -152,15 +148,18 @@ void ParticleFilter::updateWeights(double sensor_range, std::array<double,2> std
         best_mark = &mark;
       }
       
+      // add associations for the observation
       particle.associations.emplace_back(obs.id);
       particle.sense_x.emplace_back(obs.x);
       particle.sense_y.emplace_back(obs.y);
 
+      // add error from observation
       const auto x_error = (obs.x - best_mark->x)/std_landmark[0];
       const auto y_error = (obs.y - best_mark->y)/std_landmark[1];
       particle.weight -= x_error*x_error + y_error*y_error;
     }
 
+    // keep track of best particle
     if (particle.weight > max_weight){
       best_particle_pt = &particle;
       max_weight = particle.weight;
@@ -186,6 +185,7 @@ void ParticleFilter::resample() {
    * Resample particles with replacement with probability proportional 
    *   to their weight.
    */
+  // create weight vector and clear original weight
   std::vector<double> weights;
   weights.reserve(particles.size());
   for (auto & particle: particles){
@@ -193,12 +193,13 @@ void ParticleFilter::resample() {
     particle.weight = 0;
   }
 
-  std::discrete_distribution particle_index(weights.begin(), weights.end());
-  
+  // create new set of particles based on particle weights
   std::vector<Particle> new_particles;
   new_particles.reserve(particles.size());
+  std::discrete_distribution particle_index(weights.begin(), weights.end());
   std::generate_n(std::back_inserter(new_particles), particles.size(), [&](){return particles[particle_index(gen)];});
 
+  // set new particles and nullify best_particle_pt
   best_particle_pt = nullptr;
   particles = new_particles;
 }
