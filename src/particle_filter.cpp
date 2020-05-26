@@ -62,7 +62,7 @@ void ParticleFilter::prediction(double delta_t, std::array<double,3> std_pos,
    *  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
    *  http://www.cplusplus.com/reference/random/default_random_engine/
    */
-  if (yaw_rate < 1e-5){
+  if (fabs(yaw_rate) < 1e-5){
     auto& distance = velocity;
     distance *= delta_t;
     for (auto & particle: particles)
