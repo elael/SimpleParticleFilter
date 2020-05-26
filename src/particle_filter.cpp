@@ -62,6 +62,42 @@ void ParticleFilter::prediction(double delta_t, std::array<double,3> std_pos,
    *  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
    *  http://www.cplusplus.com/reference/random/default_random_engine/
    */
+  if (yaw_rate < 1e-5){
+    auto& distance = velocity;
+    distance *= delta_t;
+    for (auto & particle: particles)
+    {    
+      // Straight Line when yaw_rate is null
+      particle.x += distance * cos(particle.theta);
+      particle.y += distance * sin(particle.theta);
+
+      // Add GPS-like noises, as process noise
+      particle.x = normal_distribution(particle.x, std_pos[0])(gen);
+      particle.y = normal_distribution(particle.y, std_pos[1])(gen);
+      particle.theta = normal_distribution(particle.theta, std_pos[2])(gen);    
+    }
+  }
+  else{
+    auto& distance = velocity;
+    distance /= yaw_rate;
+
+    auto& theta_displacement = yaw_rate;
+    theta_displacement *= delta_t;
+
+    for (auto & particle: particles)
+    {    
+      // Coordinated Turn Model
+      particle.x += distance * (sin(particle.theta + theta_displacement) - sin(particle.theta));
+      particle.y += distance * (cos(particle.theta) - cos(particle.theta + theta_displacement));
+      particle.theta += theta_displacement;
+
+      // Add GPS-like noises, as process noise
+      particle.x = normal_distribution(particle.x, std_pos[0])(gen);
+      particle.y = normal_distribution(particle.y, std_pos[1])(gen);
+      particle.theta = normal_distribution(particle.theta, std_pos[2])(gen);    
+    }
+  }
+  
 
 
 }
