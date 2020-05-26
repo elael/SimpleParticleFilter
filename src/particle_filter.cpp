@@ -33,7 +33,7 @@ void ParticleFilter::init(double x, double y, double theta, std::array<double,3>
    * NOTE: Consult particle_filter.h for more information about this method 
    *   (and others in this file).
    */
-  num_particles = 1000;  // TODO: Set the number of particles
+  num_particles = 20;  // TODO: Set the number of particles
 
   // Set of current particles
   normal_distribution<double> dist_x(x, std[0]);
@@ -42,7 +42,7 @@ void ParticleFilter::init(double x, double y, double theta, std::array<double,3>
 
   particles.reserve(num_particles);
   std::generate_n(std::back_inserter(particles), num_particles,
-    [&,n=-1]() mutable {return Particle{++n, dist_x(gen), dist_y(gen), dist_theta(gen), 1, {}, {}, {}};}
+    [&,n=-1]() mutable {return Particle{++n, dist_x(gen), dist_y(gen), dist_theta(gen), 0, {}, {}, {}};}
   );
   
   // Vector of weights of all particles
@@ -215,7 +215,20 @@ void ParticleFilter::resample() {
    * NOTE: You may find std::discrete_distribution helpful here.
    *   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
    */
+  std::vector<double> weights;
+  weights.reserve(particles.size());
+  for (auto & particle: particles){
+    weights.emplace_back(exp(particle.weight/2.0));
+    particle.weight = 0;
+  }
 
+  std::discrete_distribution particle_index(weights.begin(), weights.end());
+  
+  std::vector<Particle> new_particles;
+  new_particles.reserve(particles.size());
+  std::generate_n(std::back_inserter(new_particles), particles.size(), [&](){return particles[particle_index(gen)];});
+
+  particles = new_particles;
 }
 
 void ParticleFilter::SetAssociations(Particle& particle, 
