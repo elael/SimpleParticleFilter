@@ -161,14 +161,24 @@ void ParticleFilter::updateWeights(double sensor_range, std::array<double,2> std
       particle.weight -= x_error*x_error + y_error*y_error;
     }
 
-    if (particle.weight > max_weight)
-      max_weight = particle.weight; 
+    if (particle.weight > max_weight){
+      best_particle_pt = &particle;
+      max_weight = particle.weight;
+    }
   }
 
   // normalize max weight to zero
   for (auto & particle: particles)
     particle.weight -= max_weight;
 
+}
+
+const Particle& ParticleFilter::best_particle() const{
+  // Just return the first particle if undecided 
+  if(best_particle_pt == nullptr)
+  return particles[0];
+
+  return *best_particle_pt;
 }
 
 void ParticleFilter::resample() {
@@ -189,6 +199,7 @@ void ParticleFilter::resample() {
   new_particles.reserve(particles.size());
   std::generate_n(std::back_inserter(new_particles), particles.size(), [&](){return particles[particle_index(gen)];});
 
+  best_particle_pt = nullptr;
   particles = new_particles;
 }
 

@@ -92,6 +92,7 @@ class ParticleFilter {
 
   // Set of current particles
   std::vector<Particle> particles;
+  const Particle& best_particle() const;
 
  private:
   // Number of particles to draw
@@ -101,7 +102,7 @@ class ParticleFilter {
   bool is_initialized;
   
   // Vector of weights of all particles
-  std::vector<double> weights; 
+  Particle* best_particle_pt = nullptr; 
 };
 
 #endif  // PARTICLE_FILTER_H_
