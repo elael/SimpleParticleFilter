@@ -145,6 +145,67 @@ void ParticleFilter::updateWeights(double sensor_range, std::array<double,2> std
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
 
+  double max_weight = -std::numeric_limits<double>::infinity();
+
+  for (auto & particle: particles){
+
+    // Filter inrange Map landmarks
+    vector<LandmarkObs> landmarks_inrange;
+
+    for(const auto& land_mark: map_landmarks.landmark_list)
+    if (fabs(land_mark.x_f - particle.x) < sensor_range && fabs(land_mark.y_f - particle.y) < sensor_range)
+    landmarks_inrange.push_back({land_mark.id_i, land_mark.x_f, land_mark.y_f});
+
+    // Transform observations to Map coordinates
+    vector<LandmarkObs> observations_inmap;
+    observations_inmap.reserve(observations.size());
+
+    for(const auto& obs: observations)
+    observations_inmap.push_back({
+      obs.id, 
+      particle.x + cos(particle.theta)*obs.x - sin(particle.theta)*obs.y,
+      particle.y + sin(particle.theta)*obs.x + cos(particle.theta)*obs.y});
+
+    // Associate correct id to observations
+    // dataAssociation(landmarks_inrange, observations_inmap);
+    
+    // clear stored associations
+    particle.associations.clear();
+    particle.associations.reserve(observations_inmap.size());
+    particle.sense_x.clear();
+    particle.sense_x.reserve(observations_inmap.size());
+    particle.sense_y.clear();
+    particle.sense_y.reserve(observations_inmap.size());
+
+    for (auto& obs: observations_inmap)
+    {
+      double nn_dist = std::numeric_limits<double>::infinity(); 
+
+      const LandmarkObs* best_mark;
+      for (const auto& mark: landmarks_inrange)
+      if(double mark_dist = dist(obs.x, obs.y, mark.x, mark.y); mark_dist < nn_dist){
+        obs.id = mark.id;
+        nn_dist = mark_dist;
+        best_mark = &mark;
+      }
+      
+      particle.associations.emplace_back(obs.id);
+      particle.sense_x.emplace_back(obs.x);
+      particle.sense_y.emplace_back(obs.y);
+
+      const auto x_error = (obs.x - best_mark->x)/std_landmark[0];
+      const auto y_error = (obs.y - best_mark->y)/std_landmark[1];
+      particle.weight -= x_error*x_error + y_error*y_error;
+    }
+
+    if (particle.weight > max_weight)
+      max_weight = particle.weight; 
+  }
+
+  // normalize max weight to zero
+  for (auto & particle: particles)
+    particle.weight -= max_weight;
+
 }
 
 void ParticleFilter::resample() {
