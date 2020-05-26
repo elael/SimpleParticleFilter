@@ -45,10 +45,6 @@ void ParticleFilter::init(double x, double y, double theta, std::array<double,3>
     [&,n=-1]() mutable {return Particle{++n, dist_x(gen), dist_y(gen), dist_theta(gen), 0, {}, {}, {}};}
   );
   
-  // Vector of weights of all particles
-  weights.reserve(num_particles);
-  std::fill_n(std::back_inserter(weights), num_particles, 1);
-  
   // Flag, if filter is initialized
   is_initialized = true;
 }
@@ -56,11 +52,7 @@ void ParticleFilter::init(double x, double y, double theta, std::array<double,3>
 void ParticleFilter::prediction(double delta_t, std::array<double,3> std_pos, 
                                 double velocity, double yaw_rate) {
   /**
-   * TODO: Add measurements to each particle and add random Gaussian noise.
-   * NOTE: When adding noise you may find std::normal_distribution 
-   *   and std::default_random_engine useful.
-   *  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
-   *  http://www.cplusplus.com/reference/random/default_random_engine/
+   * Add measurements to each particle and add random Gaussian noise.
    */
   if (fabs(yaw_rate) < 1e-5){
     auto& distance = velocity;
@@ -102,32 +94,6 @@ void ParticleFilter::prediction(double delta_t, std::array<double,3> std_pos,
 
 }
 
-void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted, 
-                                     vector<LandmarkObs>& observations) {
-  /**
-   * TODO: Find the predicted measurement that is closest to each 
-   *   observed measurement and assign the observed measurement to this 
-   *   particular landmark.
-   * NOTE: this method will NOT be called by the grading code. But you will 
-   *   probably find it useful to implement this method and use it as a helper 
-   *   during the updateWeights phase.
-   */
-
-  for (auto& obs: observations)
-  {
-    double nn_dist = std::numeric_limits<double>::infinity(); 
-
-    for (const auto& mark: predicted)
-    if(double mark_dist = dist(obs.x, obs.y, mark.x, mark.y); mark_dist < nn_dist){
-      obs.id = mark.id;
-      nn_dist = mark_dist;
-    }
-
-  }
-  
-
-}
-
 void ParticleFilter::updateWeights(double sensor_range, std::array<double,2> std_landmark, 
                                    const vector<LandmarkObs> &observations, 
                                    const Map &map_landmarks) {
@@ -165,9 +131,6 @@ void ParticleFilter::updateWeights(double sensor_range, std::array<double,2> std
       obs.id, 
       particle.x + cos(particle.theta)*obs.x - sin(particle.theta)*obs.y,
       particle.y + sin(particle.theta)*obs.x + cos(particle.theta)*obs.y});
-
-    // Associate correct id to observations
-    // dataAssociation(landmarks_inrange, observations_inmap);
     
     // clear stored associations
     particle.associations.clear();
@@ -210,10 +173,8 @@ void ParticleFilter::updateWeights(double sensor_range, std::array<double,2> std
 
 void ParticleFilter::resample() {
   /**
-   * TODO: Resample particles with replacement with probability proportional 
-   *   to their weight. 
-   * NOTE: You may find std::discrete_distribution helpful here.
-   *   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
+   * Resample particles with replacement with probability proportional 
+   *   to their weight.
    */
   std::vector<double> weights;
   weights.reserve(particles.size());
@@ -229,20 +190,6 @@ void ParticleFilter::resample() {
   std::generate_n(std::back_inserter(new_particles), particles.size(), [&](){return particles[particle_index(gen)];});
 
   particles = new_particles;
-}
-
-void ParticleFilter::SetAssociations(Particle& particle, 
-                                     const vector<int>& associations, 
-                                     const vector<double>& sense_x, 
-                                     const vector<double>& sense_y) {
-  // particle: the particle to which assign each listed association, 
-  //   and association's (x,y) world coordinates mapping
-  // associations: The landmark id that goes along with each listed association
-  // sense_x: the associations x mapping already converted to world coordinates
-  // sense_y: the associations y mapping already converted to world coordinates
-  particle.associations= associations;
-  particle.sense_x = sense_x;
-  particle.sense_y = sense_y;
 }
 
 string ParticleFilter::getAssociations(Particle best) {
